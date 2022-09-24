@@ -143,7 +143,8 @@ def plot_confusion_matrix(y, y_pred, labels=None, title=None, save_path=None):
 
 
 def plot_weights(weights):
-    plt.bar(np.arange(weights.shape[0]), weights)
+    plt.bar(np.arange(weights.shape[0]) + 1, weights)
+    plt.xlim([1, weights.shape[0]])
     plt.grid()
     plt.show()
 
