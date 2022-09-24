@@ -64,9 +64,9 @@ class FeatureRegularizer(Regularizer):
         # force total sum to be either equal, or less than or equal to the gene panel size
         if self.n_features:
             if self.strict:
-                regularization += tf.maximum(tf.reduce_sum(abs_x) - self.n_features, 0) * self.alpha
-            else:
                 regularization += tf.abs(tf.reduce_sum(abs_x) - self.n_features) * self.alpha
+            else:
+                regularization += tf.maximum(tf.reduce_sum(abs_x) - self.n_features, 0) * self.alpha
 
         # take prioritized genes
         if self.s is not None:
