@@ -7,7 +7,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import train_test_split
 
 
-def plot_confusion_matrix(y, y_pred, labels=None, title=None, save_path=None):
+def plot_confusion_matrix(y, y_pred, labels=None, title=None, save_path=None, annot=False):
     if labels is None:
         cm = pd.DataFrame(confusion_matrix(y, y_pred))
     else:
@@ -15,8 +15,7 @@ def plot_confusion_matrix(y, y_pred, labels=None, title=None, save_path=None):
 
     sns.set_theme()
     plt.figure(figsize=(8, 8))
-    sns.heatmap(cm, vmin=0, vmax=100, annot=True, annot_kws={'fontsize': 10}, fmt='.0f', cmap="viridis", square=True)
-    # sns.heatmap(cm, vmin=0, vmax=100, cmap="viridis", cbar=False, square=True)
+    sns.heatmap(cm, vmin=0, vmax=100, annot=annot, annot_kws={'fontsize': 10}, fmt='.0f', cmap="viridis", square=True)
 
     plt.xlabel('Predicted Labels')
     plt.ylabel('True Labels')
@@ -38,12 +37,8 @@ def plot_weights(weights):
 
 
 def plot_history(history):
-    sns.set_theme()
-    # sns.despine(offset=5, trim=False)
+    sns.set_theme(style="whitegrid")
     f, axs = plt.subplots(1, 2, figsize=(20, 8))
-
-    # sns.set(font_scale=1.5)
-    # sns.set_style("white")
 
     axs[0].semilogy(history.history['loss'])
     axs[0].semilogy(history.history['val_loss'])
@@ -61,16 +56,19 @@ def plot_history(history):
 
     plt.tight_layout()
     plt.show(block=False)
-    # plt.close("all")
 
 
-def test_classifier(X, y, markers=None, labels=None, clf=None, title=None, verbose=1, save_path=None):
+def test_classifier(X, y, markers=None, labels=None, clf=None, plot_cm=False, title=None, save_path=None):
     """
     Test performance of the markers using a classifier
     :param X: data
-    :param y: labels
+    :param y: label encoding of cell types
     :param markers: selected markers or None. If None, run the classifier on whole dataset
+    :param labels: name of the cell types
     :param clf: a classifier
+    :param plot_cm: plots the confusion matrix
+    :param title: title of the confusion matrix
+    :param save_path: save path of the confusion matrix
     :return: accuracy of the classifier
     """
     if clf is None:
@@ -84,16 +82,14 @@ def test_classifier(X, y, markers=None, labels=None, clf=None, title=None, verbo
     )
 
     clf.fit(X_train, y_train)
-
     y_pred = clf.predict(X_test)
 
-    if verbose == 1:
+    if plot_cm:
         if title is None:
             title = 'Classifier Confusion Matrix'
         plot_confusion_matrix(y_test, y_pred, labels=labels, title=title, save_path=save_path)
 
-    # accuracy = clf.score(X_test, y_test) * 100
     accuracy = accuracy_score(y_test, y_pred) * 100
     f1 = f1_score(y_test, y_pred, average="macro")
-    # print('Accuracy: %.2f' % accuracy)
+
     return accuracy, f1
