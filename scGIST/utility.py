@@ -3,6 +3,7 @@ from tensorflow.keras import backend
 from tensorflow.keras.layers import Layer
 from tensorflow.keras.regularizers import Regularizer
 from tensorflow.keras import initializers, regularizers
+from tensorflow.keras.initializers import Constant
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -81,14 +82,20 @@ class FeatureRegularizer(Regularizer):
         return {'l1': float(self.l1)}
 
 
-class WeightedLayer(Layer):
+class FeatureSelector(Layer):
     def __init__(self,
-                 kernel_initializer='ones',
+                 kernel_initializer=None,
                  kernel_regularizer=None,
                  **kwargs):
-        super(WeightedLayer, self).__init__(**kwargs)
-        self.kernel_initializer = initializers.get(kernel_initializer)
+        super(FeatureSelector, self).__init__(**kwargs)
+
+        if kernel_initializer:
+            self.kernel_initializer = initializers.get(kernel_initializer)
+        else:
+            self.kernel_initializer = Constant(0.5)
+
         self.kernel_regularizer = regularizers.get(kernel_regularizer)
+        self.kernel = None
 
     def build(self, input_shape):
         self.kernel = self.add_weight('kernel',
@@ -103,7 +110,7 @@ class WeightedLayer(Layer):
         return tf.multiply(inputs, self.kernel)
 
     def get_config(self):
-        config = super(WeightedLayer, self).get_config()
+        config = super(FeatureSelector, self).get_config()
         config.update({
             'kernel_initializer': initializers.serialize(self.kernel_initializer),
             'kernel_regularizer': regularizers.serialize(self.kernel_regularizer),
