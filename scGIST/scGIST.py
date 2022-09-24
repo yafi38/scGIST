@@ -31,7 +31,7 @@ class scGIST:
 
         inputs = Input(shape=(n_features,), name='inputs')
         weighted_layer = WeightedLayer(
-            kernel_regularizer=FS(l1=0.01, n_features=panel_size, s=weights, pairs=pairs, alpha=alpha, beta=beta, gamma=gamma),
+            kernel_regularizer=FeatureRegularizer(l1=0.01, panel_size=panel_size, priority_score=weights, pairs=pairs, alpha=alpha, beta=beta, gamma=gamma),
             name='weighted_layer', kernel_initializer=Constant(0.5)
         )(inputs)
 
