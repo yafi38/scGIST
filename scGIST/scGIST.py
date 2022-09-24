@@ -112,24 +112,26 @@ class scGIST:
     def get_markers(self, verbose=0):
         # obtain weights of the weighted layer
         weights = abs(self.model.get_layer('weighted_layer').weights[0]).numpy()
-        # only consider significant weights
-        significant_weights = weights[weights > 0.01]
 
-        if verbose != 0:
-            plot_weights(significant_weights)
+        if not self.strict:
+            # get weights with significant values
+            significant_weights = weights[weights > 0.01]
 
-        total_sig_weights = significant_weights.shape[0]
+            total_sig_weights = significant_weights.shape[0]
 
-        if verbose != 0:
-            print('Significant Weights Found: ', total_sig_weights)
+            if verbose != 0:
+                print('Significant Weights Found: ', total_sig_weights)
 
-        if self.panel_size is None:
-            self.panel_size = total_sig_weights
-        else:
-            self.panel_size = min(self.panel_size, total_sig_weights)
+            if self.panel_size is None:
+                self.panel_size = total_sig_weights
+            else:
+                self.panel_size = min(self.panel_size, total_sig_weights)
+
         markers = sorted(
             range(len(weights)), key=lambda i: weights[i], reverse=True
         )[: self.panel_size]
 
-        return markers
+        if verbose != 0:
+            plot_weights(weights[markers])
 
+        return markers
