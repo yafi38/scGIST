@@ -63,7 +63,7 @@ scGIST.get_markers_names(plot_weights)
 * Test performance of the gene panel with a classifier
     * X: gene expression matrix
     * y: cell type labels
-    * markers: selected gene panel
+    * markers: indices of selected gene panel (scGIST.get_markers_indices())
     * labels: name of the cell types
     * clf: a classifier (if None, default is KNN)
 ```
