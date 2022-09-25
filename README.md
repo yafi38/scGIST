@@ -13,6 +13,7 @@ python setup.py
 
 ### Initialize the model
 ```
+from scgist import scGIST
 scGIST = scGIST()
 ```
 
@@ -66,7 +67,8 @@ scGIST.get_markers_names(plot_weights)
     * labels: name of the cell types
     * clf: a classifier (if None, default is KNN)
 ```
-scGIST.get_accuracy(X, y, markers, labels, clf)
+from scGIST import test_classifier
+accuracy, f1_score = test_classifier(X, y, markers, labels, clf)
 ```
 
 
