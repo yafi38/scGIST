@@ -10,6 +10,7 @@ setup(
     author_email='yafi2475@gmail.com',
     description='',
     install_requires=[
+        'scanpy~=1.8.2',
         'sklearn~=0.0',
         'scikit-learn~=1.0.1',
         'tensorflow~=2.5.0',
