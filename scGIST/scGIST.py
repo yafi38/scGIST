@@ -1,12 +1,11 @@
-from tensorflow.keras.layers import Input, Dense
-from tensorflow.keras import Model
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.regularizers import l2, l1
-from tensorflow.keras.utils import plot_model, to_categorical
-from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.callbacks import EarlyStopping, LearningRateScheduler
-from tensorflow.keras.initializers import RandomUniform, Constant
 from sklearn.utils.class_weight import compute_class_weight
+from tensorflow.keras import Model
+from tensorflow.keras.layers import Input, Dense
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.regularizers import l2
+from tensorflow.keras.utils import to_categorical
+
+from scGIST.customLayers import FeatureRegularizer, OneToOneLayer
 from scGIST.utility import *
 
 
@@ -14,9 +13,10 @@ class scGIST:
     def __init__(self):
         self.model = None
         self.panel_size = None
+        self.strict = True
 
-    def create_model(self, n_features, n_classes, panel_size=None, weights=None, pairs=None, decision_model=None,
-                     alpha=0.5, beta=0.5, gamma=0.5):
+    def create_model(self, n_features, n_classes, panel_size=None, weights=None, pairs=None,
+                     alpha=0.5, beta=0.5, gamma=0.5, strict=True):
         """
         Creates and compiles a DNN model
         :param n_features: no. of features/cells
@@ -24,31 +24,32 @@ class scGIST:
         :param panel_size: Total no. of features to be taken
         :param weights: List of features we are interested in
         :param pairs: Pairs of genes which should be included or excluded together
-        :param decision_model: Keras model used as decision network. If None, neural-marker will
-         create one
+        :param alpha: strictness of the panel size
+        :param beta: priority coefficient
+        :param gamma: likeliness to take pairs together
+        :param strict: when True, the model will select exactly the same amount of genes specified in the panel size;
+        when False, the model will select less than or equal to the amount of genes specified.
         """
         self.panel_size = panel_size
+        self.strict = strict
 
         inputs = Input(shape=(n_features,), name='inputs')
-        weighted_layer = WeightedLayer(
-            kernel_regularizer=FS(l1=0.01, n_features=panel_size, s=weights, pairs=pairs, alpha=alpha, beta=beta, gamma=gamma),
-            name='weighted_layer', kernel_initializer=Constant(0.5)
-        )(inputs)
 
-        if decision_model is None:
-            hidden1 = Dense(
-                units=32, activation='relu', kernel_regularizer=l2(0.01), name='hidden_layer1'
-            )(weighted_layer)
+        feature_regularizer = FeatureRegularizer(l1=0.01, panel_size=panel_size, priority_score=weights, pairs=pairs,
+                                                 alpha=alpha, beta=beta, gamma=gamma, strict=strict)
+        weighted_layer = OneToOneLayer(kernel_regularizer=feature_regularizer, name='weighted_layer')(inputs)
 
-            hidden2 = Dense(
-                units=16, activation='relu', kernel_regularizer=l2(0.01), name='hidden_layer2'
-            )(hidden1)
+        hidden1 = Dense(
+            units=32, activation='relu', kernel_regularizer=l2(0.01), name='hidden_layer1'
+        )(weighted_layer)
 
-            outputs = Dense(
-                units=n_classes, activation='softmax', kernel_regularizer=l2(0.01), name='outputs'
-            )(hidden2)
-        else:
-            outputs = decision_model(weighted_layer)
+        hidden2 = Dense(
+            units=16, activation='relu', kernel_regularizer=l2(0.01), name='hidden_layer2'
+        )(hidden1)
+
+        outputs = Dense(
+            units=n_classes, activation='softmax', kernel_regularizer=l2(0.01), name='outputs'
+        )(hidden2)
 
         self.model = Model(inputs, outputs)
 
@@ -64,9 +65,11 @@ class scGIST:
             optimizer=opt, loss="categorical_crossentropy", metrics=['accuracy', 'Precision', 'Recall']
         )
 
-    def train_model(self, X, y, validation_split=0.2, verbose=2, epochs=200):
+    def train_model(self, adata=None, label_column=None, X=None, y=None, validation_split=0.2, verbose=2, epochs=200):
         """
         Trains the Keras model. It can also be trained using self.model.fit() function of Keras.
+        :param label_column: AnnData column name that contains the label names of the cell types
+        :param adata: AnnData object
         :param epochs: no. of epochs
         :param X: input data
         :param y: target data/labels. y is assumed not to be one hot encoded
@@ -74,6 +77,17 @@ class scGIST:
         :param verbose: set verbosity level
         :return: network train history
         """
+
+        if adata is not None:
+            if label_column is None:
+                print("Please provide the column name in adata.obs to get the cell types")
+                return
+            X = np.array(adata.X)
+            y, names = adata.obs[label_column].factorize()
+            y = y.tolist()
+        elif X is None or y is None:
+            print("Please provide data to train on")
+            return
 
         class_labels = np.unique(y)
         class_weight = compute_class_weight(class_weight='balanced', classes=class_labels, y=y)
@@ -83,12 +97,11 @@ class scGIST:
         X_train, X_test, y_train, y_test = train_test_split(
             X, y_cat, test_size=validation_split, random_state=33, stratify=y
         )
-        early_stop = EarlyStopping(monitor='val_loss', patience=10, min_delta=1e-6)
+
         history = self.model.fit(
             X_train, y_train,
             batch_size=64, verbose=verbose,
             validation_data=(X_test, y_test),
-            # callbacks=[early_stop],
             epochs=epochs,
             class_weight=class_weight
         )
@@ -108,94 +121,40 @@ class scGIST:
             plot_confusion_matrix(y_test, y_pred, title='Model Confusion Matrix')
         return history
 
-    def get_markers(self, verbose=0):
+    def get_markers_names(self, adata, verbose=0, plot_weights=False):
+        markers_indices, marker_weights = self.get_markers_indices(verbose, return_weights=True)
+        markers_names = adata.var_names[markers_indices].tolist()
+        if plot_weights:
+            plot_marker_weights(markers_names, marker_weights)
+
+        return markers_names
+
+    def get_markers_indices(self, verbose=0, plot_weights=False, return_weights=False):
         # obtain weights of the weighted layer
         weights = abs(self.model.get_layer('weighted_layer').weights[0]).numpy()
-        # only consider significant weights
-        significant_weights = weights[weights > 0.01]
 
-        if verbose != 0:
-            plot_weights(significant_weights)
+        if not self.strict:
+            # get weights with significant values
+            significant_weights = weights[weights > 0.01]
 
-        total_sig_weights = significant_weights.shape[0]
+            total_sig_weights = significant_weights.shape[0]
 
-        if verbose != 0:
-            print('Significant Weights Found: ', total_sig_weights)
+            if verbose != 0:
+                print('Significant Weights Found: ', total_sig_weights)
 
-        if self.panel_size is None:
-            self.panel_size = total_sig_weights
-        else:
-            self.panel_size = min(self.panel_size, total_sig_weights)
+            if self.panel_size is None:
+                self.panel_size = total_sig_weights
+            else:
+                self.panel_size = min(self.panel_size, total_sig_weights)
+
         markers = sorted(
             range(len(weights)), key=lambda i: weights[i], reverse=True
         )[: self.panel_size]
 
-        return markers
+        if plot_weights:
+            plot_marker_weights(markers, weights[markers])
 
-# def main():
-#     X, y = load_data()
-#
-#     n_features = X.shape[1]
-#     n_labels = len(np.unique(y))
-#
-#     model = get_model(n_features, n_labels)
-#
-#     return model
-
-#
-# if __name__ == "__main__":
-#     # final_model = main()
-#     panel_size = 30
-#     X, y_raw = load_pbmc()
-#
-#     n_features = X.shape[1]
-#     n_labels = len(np.unique(y_raw))
-#
-#     y = to_categorical(y_raw)
-#
-#     X_train, X_test, y_train, y_test = train_test_split(
-#         X, y, test_size=0.2, random_state=33, stratify=y
-#     )
-#
-#     early_stop = EarlyStopping(monitor='val_loss', patience=10, min_delta=1e-6)
-#
-#     model = get_model(n_features, n_labels, panel_size=panel_size)
-#     history = model.fit(
-#         X_train, y_train,
-#         batch_size=64, verbose=2,
-#         validation_data=(X_test, y_test),
-#         callbacks=[early_stop],
-#         epochs=500
-#     )
-#
-#     print('Loss: %.4f, Val Loss: %.4f' % (history.history['loss'][-1], history.history['val_loss'][-1]))
-#     print('Accuracy: %.2f, Val Accuracy: %.2f' % (
-#         history.history['accuracy'][-1] * 100, history.history['val_accuracy'][-1] * 100))
-#
-#     score = abs(model.get_layer('weighted_layer').weights[0])
-#     # plt.bar(np.arange(n_features), weights)
-#     # plt.grid()
-#     # plt.savefig('3k.svg', format='svg')
-#     # plt.show()
-#
-#     score = score.numpy()
-#     significant_weights = score[score > 0.01]
-#     plt.bar(np.arange(significant_weights.shape[0]), significant_weights)
-#     plt.grid()
-#     # plt.savefig('img/head_neck_weighted60.svg', format='svg')
-#     plt.show()
-#     print(np.sum((score > 0.01).astype('int32')))
-#     print(np.sum(significant_weights))
-#
-#     markers = sorted(range(len(score)), key=lambda i: score[i], reverse=True)[: panel_size]
-#     clf = KNeighborsClassifier()
-#     accuracy_markers = performance(X[:, markers], y_raw, X[:, markers], y_raw, clf)
-#     print('Accuracy:', accuracy_markers)
-#
-#     # if weights is not None:
-#     #     taken = 0
-#     #     for i in range(panel_size):
-#     #         if weights[markers[i]] != 0:
-#     #             # print(markers[i])
-#     #             taken += 1
-#     #     print("Gene of interest taken:", taken)
+        if return_weights:
+            return markers, weights[markers]
+        else:
+            return markers
