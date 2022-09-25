@@ -1,12 +1,11 @@
-import tensorflow as tf
 from sklearn.utils.class_weight import compute_class_weight
-from tensorflow.keras import Model, backend, initializers, regularizers
-from tensorflow.keras.initializers import Constant
-from tensorflow.keras.layers import Layer, Input, Dense
+from tensorflow.keras import Model
+from tensorflow.keras.layers import Input, Dense
 from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.regularizers import Regularizer, l2
+from tensorflow.keras.regularizers import l2
 from tensorflow.keras.utils import to_categorical
 
+from scGIST.customLayers import FeatureRegularizer, OneToOneLayer
 from scGIST.utility import *
 
 
@@ -66,9 +65,11 @@ class scGIST:
             optimizer=opt, loss="categorical_crossentropy", metrics=['accuracy', 'Precision', 'Recall']
         )
 
-    def train_model(self, X, y, validation_split=0.2, verbose=2, epochs=200):
+    def train_model(self, adata=None, label_column=None, X=None, y=None, validation_split=0.2, verbose=2, epochs=200):
         """
         Trains the Keras model. It can also be trained using self.model.fit() function of Keras.
+        :param label_column: AnnData column name that contains the label names of the cell types
+        :param adata: AnnData object
         :param epochs: no. of epochs
         :param X: input data
         :param y: target data/labels. y is assumed not to be one hot encoded
@@ -76,6 +77,17 @@ class scGIST:
         :param verbose: set verbosity level
         :return: network train history
         """
+
+        if adata is not None:
+            if label_column is None:
+                print("Please provide the column name in adata.obs to get the cell types")
+                return
+            X = np.array(adata.X)
+            y, names = adata.obs[label_column].factorize()
+            y = y.tolist()
+        elif X is None or y is None:
+            print("Please provide data to train on")
+            return
 
         class_labels = np.unique(y)
         class_weight = compute_class_weight(class_weight='balanced', classes=class_labels, y=y)
@@ -109,7 +121,15 @@ class scGIST:
             plot_confusion_matrix(y_test, y_pred, title='Model Confusion Matrix')
         return history
 
-    def get_markers(self, verbose=0):
+    def get_markers_names(self, adata, verbose=0, plot_weights=False):
+        markers_indices, marker_weights = self.get_markers_indices(verbose, return_weights=True)
+        markers_names = adata.var_names[markers_indices].tolist()
+        if plot_weights:
+            plot_marker_weights(markers_names, marker_weights)
+
+        return markers_names
+
+    def get_markers_indices(self, verbose=0, plot_weights=False, return_weights=False):
         # obtain weights of the weighted layer
         weights = abs(self.model.get_layer('weighted_layer').weights[0]).numpy()
 
@@ -131,11 +151,10 @@ class scGIST:
             range(len(weights)), key=lambda i: weights[i], reverse=True
         )[: self.panel_size]
 
-        if verbose != 0:
-            plot_weights(weights[markers])
+        if plot_weights:
+            plot_marker_weights(markers, weights[markers])
 
-        return markers
-
-
-
-
+        if return_weights:
+            return markers, weights[markers]
+        else:
+            return markers

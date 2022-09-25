@@ -29,9 +29,13 @@ def plot_confusion_matrix(y, y_pred, labels=None, title=None, save_path=None, an
     plt.show()
 
 
-def plot_weights(weights):
-    plt.bar(np.arange(weights.shape[0]) + 1, weights)
-    plt.xlim([1, weights.shape[0]])
+def plot_marker_weights(markers, weights):
+    total_markers = len(markers)
+    sns.set_theme(style="whitegrid")
+    plt.figure(figsize=(total_markers / 7.5, 4))
+    plt.bar(markers, weights)
+    plt.xlim([-1, total_markers])
+    plt.xticks(size=6, rotation=90, rotation_mode='default')
     plt.grid()
     plt.show()
 
@@ -58,9 +62,11 @@ def plot_history(history):
     plt.show(block=False)
 
 
-def test_classifier(X, y, markers=None, labels=None, clf=None, plot_cm=False, title=None, save_path=None):
+def test_classifier(adata=None, label_column=None, X=None, y=None, markers=None, labels=None, clf=None, plot_cm=False, title=None, save_path=None):
     """
     Test performance of the markers using a classifier
+    :param label_column: AnnData column name that contains the label names of the cell types
+    :param adata: AnnData object
     :param X: data
     :param y: label encoding of cell types
     :param markers: selected markers or None. If None, run the classifier on whole dataset
@@ -71,6 +77,17 @@ def test_classifier(X, y, markers=None, labels=None, clf=None, plot_cm=False, ti
     :param save_path: save path of the confusion matrix
     :return: accuracy of the classifier
     """
+    if adata is not None:
+        if label_column is None:
+            print("Please provide the column name in adata.obs to get the cell types")
+            return
+        X = np.array(adata.X)
+        y, names = adata.obs[label_column].factorize()
+        y = y.tolist()
+    elif X is None or y is None:
+        print("Please provide data to train on")
+        return
+
     if clf is None:
         clf = KNeighborsClassifier()
 
