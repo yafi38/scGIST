@@ -15,14 +15,14 @@ class scGIST:
         self.panel_size = None
         self.strict = True
 
-    def create_model(self, n_features, n_classes, panel_size=None, weights=None, pairs=None,
+    def create_model(self, n_features, n_classes, panel_size=None, priority_scores=None, pairs=None,
                      alpha=0.5, beta=0.5, gamma=0.5, strict=True):
         """
         Creates and compiles a DNN model
         :param n_features: no. of features/cells
         :param n_classes: no. of classes/clusters/labels
         :param panel_size: Total no. of features to be taken
-        :param weights: List of features we are interested in
+        :param priority_scores: List of features we are interested in
         :param pairs: Pairs of genes which should be included or excluded together
         :param alpha: strictness of the panel size
         :param beta: priority coefficient
@@ -35,7 +35,7 @@ class scGIST:
 
         inputs = Input(shape=(n_features,), name='inputs')
 
-        feature_regularizer = FeatureRegularizer(l1=0.01, panel_size=panel_size, priority_score=weights, pairs=pairs,
+        feature_regularizer = FeatureRegularizer(l1=0.01, panel_size=panel_size, priority_score=priority_scores, pairs=pairs,
                                                  alpha=alpha, beta=beta, gamma=gamma, strict=strict)
         weighted_layer = OneToOneLayer(kernel_regularizer=feature_regularizer, name='weighted_layer')(inputs)
 
