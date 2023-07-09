@@ -16,7 +16,7 @@ class scGIST:
         self.strict = True
 
     def create_model(self, n_features, n_classes, panel_size=None, priority_scores=None, pairs=None,
-                     alpha=0.5, beta=0.5, gamma=0.5, strict=True):
+                     alpha=0.5, beta=0.2, gamma=0.5, strict=True):
         """
         Creates and compiles a DNN model
         :param n_features: no. of features/cells
