@@ -6,7 +6,7 @@ scGIST is a deep neural network that designs sc-ST gene panel through constraine
 
 Install the requirements using the following command (recommended python version is 3.7.11):
 ```
-python setup.py
+python setup.py install
 ```
 
 ## Usage
