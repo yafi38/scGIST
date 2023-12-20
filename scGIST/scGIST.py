@@ -158,3 +158,9 @@ class scGIST:
             return markers, weights[markers]
         else:
             return markers
+        
+    def get_significant_marker_count(self):
+        weights = abs(self.model.get_layer('weighted_layer').weights[0]).numpy()
+        significant_weights = weights[weights > 0.01]
+
+        return len(significant_weights)

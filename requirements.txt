@@ -1,0 +1,9 @@
+scanpy~=1.8.2
+numpy~=1.19.5
+pandas~=1.3.4
+matplotlib~=3.5.0
+tensorflow~=2.5.0
+seaborn~=0.11.2
+scgenefit~=1.0.2
+smashpy~=0.1.2
+scikit-learn~=1.0.1
