@@ -1,5 +1,7 @@
 # scGIST
 
+[![DOI](https://zenodo.org/badge/540553394.svg)](https://zenodo.org/doi/10.5281/zenodo.10467038)
+
 scGIST is a deep neural network that designs sc-ST gene panel through constrained feature selection. Additionally, scGIST enables genes of interest to be prioritized for panel inclusion while still adhering to its size restriction.
 
 ## Installation
