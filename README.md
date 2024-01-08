@@ -82,7 +82,10 @@ priority_scores = get_priority_score_list(adata, gene_priorities)
 gist.create_model(n_genes, n_classes, panel_size=panel_size, priority_scores=priority_scores, alpha=0.2, beta=0.5)
 ```
 
+## Examples
 
+- [How to preprocess](preprocess.ipynb)
+- [How to run the model](run_scGIST.ipynb)
 
 
 
