@@ -155,3 +155,6 @@ data/
 
 # result files
 results/
+
+# asdf tool file
+.tool-versions

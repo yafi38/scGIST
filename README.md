@@ -7,9 +7,12 @@ scGIST is a deep neural network that designs sc-ST gene panel through constraine
 ## Installation
 
 Install the requirements using the following command (recommended python version is 3.7.11):
+
+```bash
+pip install -r requirements.txt
 ```
-python setup.py install
-```
+
+Use `sudo` if needed.
 
 ## Usage
 
@@ -86,13 +89,3 @@ gist.create_model(n_genes, n_classes, panel_size=panel_size, priority_scores=pri
 
 - [How to preprocess](preprocess.ipynb)
 - [How to run the model](run_scGIST.ipynb)
-
-
-
-
-
-
-
-
-
-
