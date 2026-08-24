@@ -90,7 +90,7 @@ class OneToOneLayer(Layer):
         self.kernel = None
 
     def build(self, input_shape):
-        self.kernel = self.add_weight('kernel',
+        self.kernel = self.add_weight(name='kernel',
                                       shape=(int(input_shape[-1]),),
                                       initializer=self.kernel_initializer,
                                       regularizer=self.kernel_regularizer,

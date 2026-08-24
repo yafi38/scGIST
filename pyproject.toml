@@ -4,27 +4,27 @@ dynamic = ["version"]
 description = "Gene panel design for spatial transcriptomics with prioritized gene sets"
 readme = "README.md"
 license = "MIT"
-requires-python = "==3.9.*"
+requires-python = ">=3.10,<3.14"
 authors = [
     { name = "Mashrur Ahmed Yafi", email = "yafi2475@gmail.com" },
     { name = "Md. Hasibul Husain Hisham" },
 ]
 classifiers = [
     "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
 ]
 dependencies = [
-    "scanpy~=1.8.2",
-    "scikit-learn~=1.0.1",
-    "tensorflow~=2.5.0",
-    "numpy~=1.19.5",
-    "matplotlib~=3.5.0",
-    "seaborn~=0.11.2",
-    "pandas~=1.3.4",
-    # tensorflow 2.5's compiled protobuf files predate protobuf>=3.20's
-    # descriptor changes and crash on import against newer protobuf.
-    "protobuf<3.20",
-    "tqdm>=4.70.0",
+    "scanpy>=1.10",
+    "scikit-learn>=1.4",
+    "tensorflow>=2.16",
+    "numpy>=1.26",
+    "matplotlib>=3.8",
+    "seaborn>=0.13",
+    "pandas>=2.2",
+    "tqdm>=4.70",
 ]
 
 [project.urls]
@@ -39,8 +39,3 @@ source = "vcs"
 
 [tool.hatch.build.targets.wheel]
 packages = ["scGIST"]
-
-[tool.uv]
-# The 2021-era pins below only resolve for this platform; broad multi-platform
-# support returns in Milestone 2 once dependencies are modernized.
-environments = ["sys_platform == 'linux' and platform_machine == 'x86_64'"]
