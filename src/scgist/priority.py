@@ -1,13 +1,17 @@
+from __future__ import annotations
+
 import numpy as np
+import numpy.typing as npt
+import pandas as pd
+from anndata import AnnData
 
 
-def get_priority_score_list(adata, gene_priorities):
+def get_priority_score_list(adata: AnnData, gene_priorities: pd.DataFrame) -> list[float]:
     if 'gene_name' not in gene_priorities.columns or 'priority' not in gene_priorities.columns:
-        print('priority_scores must contain "gene_name" and "priority" column')
-        return None
+        raise ValueError('gene_priorities must contain "gene_name" and "priority" columns')
 
     n_genes = adata.X.shape[1]
-    priority_scores = np.zeros(n_genes)
+    priority_scores: npt.NDArray[np.float64] = np.zeros(n_genes)
 
     for _, row in gene_priorities.iterrows():
         if row['gene_name'] in adata.var_names:

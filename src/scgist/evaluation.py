@@ -1,4 +1,11 @@
+from __future__ import annotations
+
+from typing import Any, Sequence
+
 import numpy as np
+import numpy.typing as npt
+from anndata import AnnData
+from sklearn.base import ClassifierMixin
 from sklearn.metrics import accuracy_score, f1_score
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
@@ -6,7 +13,18 @@ from sklearn.neighbors import KNeighborsClassifier
 from scgist.plotting import plot_confusion_matrix
 
 
-def test_classifier(adata=None, label_column=None, X=None, y=None, markers=None, labels=None, clf=None, plot_cm=False, title=None, save_path=None):
+def test_classifier(
+    adata: AnnData | None = None,
+    label_column: str | None = None,
+    X: npt.NDArray[np.floating[Any]] | None = None,
+    y: Sequence[int] | npt.NDArray[np.integer[Any]] | None = None,
+    markers: Sequence[int] | None = None,
+    labels: Sequence[str] | None = None,
+    clf: ClassifierMixin | None = None,
+    plot_cm: bool = False,
+    title: str | None = None,
+    save_path: str | None = None,
+) -> tuple[float, float]:
     """
     Test performance of the markers using a classifier
     :param label_column: AnnData column name that contains the label names of the cell types
@@ -19,18 +37,16 @@ def test_classifier(adata=None, label_column=None, X=None, y=None, markers=None,
     :param plot_cm: plots the confusion matrix
     :param title: title of the confusion matrix
     :param save_path: save path of the confusion matrix
-    :return: accuracy of the classifier
+    :return: accuracy and macro F1 score of the classifier
     """
     if adata is not None:
         if label_column is None:
-            print("Please provide the column name in adata.obs to get the cell types")
-            return
+            raise ValueError("label_column is required when adata is provided")
         X = np.array(adata.X)
-        y, names = adata.obs[label_column].factorize()
-        y = y.tolist()
+        y_codes, _names = adata.obs[label_column].factorize()
+        y = y_codes.tolist()
     elif X is None or y is None:
-        print("Please provide data to train on")
-        return
+        raise ValueError("Provide either adata and label_column, or X and y")
 
     if clf is None:
         clf = KNeighborsClassifier()

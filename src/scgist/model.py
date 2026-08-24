@@ -1,9 +1,16 @@
+from __future__ import annotations
+
+from typing import Any, Sequence
+
 import numpy as np
+import numpy.typing as npt
+from anndata import AnnData
 from sklearn.model_selection import train_test_split
 from sklearn.utils.class_weight import compute_class_weight
 from tensorflow.keras import Model
-from tensorflow.keras.layers import Input, Dense
-from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.callbacks import History
+from tensorflow.keras.layers import Dense, Input
+from tensorflow.keras.optimizers import Adam, Optimizer
 from tensorflow.keras.regularizers import l2
 from tensorflow.keras.utils import to_categorical
 
@@ -12,13 +19,23 @@ from scgist.plotting import plot_confusion_matrix, plot_history, plot_marker_wei
 
 
 class scGIST:
-    def __init__(self):
-        self.model = None
-        self.panel_size = None
-        self.strict = True
+    def __init__(self) -> None:
+        self.model: Model | None = None
+        self.panel_size: int | None = None
+        self.strict: bool = True
 
-    def create_model(self, n_features, n_classes, panel_size=None, priority_scores=None, pairs=None,
-                     alpha=0.5, beta=0.2, gamma=0.5, strict=True):
+    def create_model(
+        self,
+        n_features: int,
+        n_classes: int,
+        panel_size: int | None = None,
+        priority_scores: Sequence[float] | None = None,
+        pairs: Sequence[Sequence[float]] | None = None,
+        alpha: float = 0.5,
+        beta: float = 0.2,
+        gamma: float = 0.5,
+        strict: bool = True,
+    ) -> None:
         """
         Creates and compiles a DNN model
         :param n_features: no. of features/cells
@@ -55,11 +72,14 @@ class scGIST:
 
         self.model = Model(inputs, outputs)
 
-    def compile_model(self, opt=None):
+    def compile_model(self, opt: Optimizer | None = None) -> None:
         """
         Compiles the Keras model. It can also be compiled using self.model.compile() function of Keras.
         :param opt: Keras optimizer. If None, Adam optimizer will be used
         """
+        if self.model is None:
+            raise ValueError("Call create_model before compile_model")
+
         if opt is None:
             opt = Adam(learning_rate=0.001)
 
@@ -67,7 +87,16 @@ class scGIST:
             optimizer=opt, loss="categorical_crossentropy", metrics=['accuracy', 'Precision', 'Recall']
         )
 
-    def train_model(self, adata=None, label_column=None, X=None, y=None, validation_split=0.2, verbose=2, epochs=200):
+    def train_model(
+        self,
+        adata: AnnData | None = None,
+        label_column: str | None = None,
+        X: npt.NDArray[np.floating[Any]] | None = None,
+        y: Sequence[int] | npt.NDArray[np.integer[Any]] | None = None,
+        validation_split: float = 0.2,
+        verbose: int = 2,
+        epochs: int = 200,
+    ) -> History:
         """
         Trains the Keras model. It can also be trained using self.model.fit() function of Keras.
         :param label_column: AnnData column name that contains the label names of the cell types
@@ -79,17 +108,17 @@ class scGIST:
         :param verbose: set verbosity level
         :return: network train history
         """
+        if self.model is None:
+            raise ValueError("Call create_model and compile_model before train_model")
 
         if adata is not None:
             if label_column is None:
-                print("Please provide the column name in adata.obs to get the cell types")
-                return
+                raise ValueError("label_column is required when adata is provided")
             X = np.array(adata.X)
-            y, names = adata.obs[label_column].factorize()
-            y = y.tolist()
+            y_codes, _names = adata.obs[label_column].factorize()
+            y = y_codes.tolist()
         elif X is None or y is None:
-            print("Please provide data to train on")
-            return
+            raise ValueError("Provide either adata and label_column, or X and y")
 
         class_labels = np.unique(y)
         class_weight = compute_class_weight(class_weight='balanced', classes=class_labels, y=y)
@@ -123,7 +152,12 @@ class scGIST:
             plot_confusion_matrix(y_test, y_pred, title='Model Confusion Matrix')
         return history
 
-    def get_markers_names(self, adata, verbose=0, plot_weights=False):
+    def get_markers_names(
+        self,
+        adata: AnnData,
+        verbose: int = 0,
+        plot_weights: bool = False,
+    ) -> list[str]:
         markers_indices, marker_weights = self.get_markers_indices(verbose, return_weights=True)
         markers_names = adata.var_names[markers_indices].tolist()
         if plot_weights:
@@ -131,7 +165,15 @@ class scGIST:
 
         return markers_names
 
-    def get_markers_indices(self, verbose=0, plot_weights=False, return_weights=False):
+    def get_markers_indices(
+        self,
+        verbose: int = 0,
+        plot_weights: bool = False,
+        return_weights: bool = False,
+    ) -> list[int] | tuple[list[int], npt.NDArray[np.floating[Any]]]:
+        if self.model is None:
+            raise ValueError("Call create_model, compile_model and train_model first")
+
         # obtain weights of the weighted layer
         weights = abs(self.model.get_layer('weighted_layer').weights[0]).numpy()
 

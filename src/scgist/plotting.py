@@ -1,10 +1,22 @@
+from __future__ import annotations
+
+from typing import Any, Sequence
+
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 from sklearn.metrics import confusion_matrix
+from tensorflow.keras.callbacks import History
 
 
-def plot_confusion_matrix(y, y_pred, labels=None, title=None, save_path=None, annot=False):
+def plot_confusion_matrix(
+    y: Sequence[int],
+    y_pred: Sequence[int],
+    labels: Sequence[str] | None = None,
+    title: str | None = None,
+    save_path: str | None = None,
+    annot: bool = False,
+) -> None:
     if labels is None:
         cm = pd.DataFrame(confusion_matrix(y, y_pred))
     else:
@@ -26,7 +38,7 @@ def plot_confusion_matrix(y, y_pred, labels=None, title=None, save_path=None, an
     plt.show()
 
 
-def plot_marker_weights(markers, weights):
+def plot_marker_weights(markers: Sequence[Any], weights: Sequence[float]) -> None:
     total_markers = len(markers)
     sns.set_theme(style="whitegrid")
     plt.figure(figsize=(total_markers / 7.5, 4))
@@ -37,7 +49,7 @@ def plot_marker_weights(markers, weights):
     plt.show()
 
 
-def plot_history(history):
+def plot_history(history: History) -> None:
     sns.set_theme(style="whitegrid")
     f, axs = plt.subplots(1, 2, figsize=(20, 8))
 
