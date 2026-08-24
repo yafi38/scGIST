@@ -3,7 +3,7 @@ import scanpy as sc
 import numpy as np
 from tqdm import tqdm
 
-from scGIST import scGIST
+from scgist import scGIST
 from data_paths import *
 
 

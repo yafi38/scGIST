@@ -1,5 +1,5 @@
 [project]
-name = "scGIST"
+name = "scgist"
 dynamic = ["version"]
 description = "Gene panel design for spatial transcriptomics with prioritized gene sets"
 readme = "README.md"
@@ -17,18 +17,25 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
 ]
 dependencies = [
-    "scanpy>=1.10",
+    "anndata>=0.10",
     "scikit-learn>=1.4",
     "tensorflow>=2.16",
     "numpy>=1.26",
     "matplotlib>=3.8",
     "seaborn>=0.13",
     "pandas>=2.2",
-    "tqdm>=4.70",
 ]
 
 [project.urls]
 Homepage = "https://github.com/yafi38/scGIST"
+
+[dependency-groups]
+# Only needed to reproduce benchmarks/create_panels.py; never shipped in the
+# published package.
+benchmarks = [
+    "scanpy>=1.10",
+    "tqdm>=4.70",
+]
 
 [build-system]
 requires = ["hatchling", "hatch-vcs"]
@@ -38,4 +45,4 @@ build-backend = "hatchling.build"
 source = "vcs"
 
 [tool.hatch.build.targets.wheel]
-packages = ["scGIST"]
+packages = ["src/scgist"]

@@ -1,3 +1,5 @@
+import numpy as np
+from sklearn.model_selection import train_test_split
 from sklearn.utils.class_weight import compute_class_weight
 from tensorflow.keras import Model
 from tensorflow.keras.layers import Input, Dense
@@ -5,8 +7,8 @@ from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.regularizers import l2
 from tensorflow.keras.utils import to_categorical
 
-from scGIST.customLayers import FeatureRegularizer, OneToOneLayer
-from scGIST.utility import *
+from scgist.layers import FeatureRegularizer, OneToOneLayer
+from scgist.plotting import plot_confusion_matrix, plot_history, plot_marker_weights
 
 
 class scGIST:
