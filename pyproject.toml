@@ -62,7 +62,9 @@ strict = true
 warn_return_any = false
 
 [[tool.mypy.overrides]]
-module = ["tensorflow.*", "sklearn.*", "seaborn.*", "pandas.*"]
+# anndata ships py.typed only in newer releases; older Python floors (3.10/3.11)
+# can resolve to a pre-py.typed anndata, so this can't be relied on universally.
+module = ["tensorflow.*", "sklearn.*", "seaborn.*", "pandas.*", "anndata.*"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
