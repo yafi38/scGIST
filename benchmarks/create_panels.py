@@ -1,10 +1,9 @@
 import pandas as pd
 import scanpy as sc
-import numpy as np
+from data_paths import *
 from tqdm import tqdm
 
 from scgist import scGIST
-from data_paths import *
 
 
 def load_pbmc():

@@ -1,7 +1,7 @@
-from scgist.model import scGIST
 from scgist.evaluation import test_classifier
+from scgist.model import scGIST
+from scgist.plotting import plot_confusion_matrix, plot_history, plot_marker_weights
 from scgist.priority import get_priority_score_list
-from scgist.plotting import plot_confusion_matrix, plot_marker_weights, plot_history
 
 __all__ = [
     "scGIST",

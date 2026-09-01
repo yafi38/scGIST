@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Any, Sequence
+from collections.abc import Sequence
+from typing import Any
 
 import tensorflow as tf
 from tensorflow.keras import backend, initializers, regularizers
@@ -95,7 +96,7 @@ class OneToOneLayer(Layer):
         kernel_regularizer: str | Regularizer | None = None,
         **kwargs: Any,
     ) -> None:
-        super(OneToOneLayer, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
         if kernel_initializer:
             self.kernel_initializer = initializers.get(kernel_initializer)
@@ -118,7 +119,7 @@ class OneToOneLayer(Layer):
         return tf.multiply(inputs, self.kernel)
 
     def get_config(self) -> dict[str, Any]:
-        config = super(OneToOneLayer, self).get_config()
+        config = super().get_config()
         config.update({
             'kernel_initializer': initializers.serialize(self.kernel_initializer),
             'kernel_regularizer': regularizers.serialize(self.kernel_regularizer),

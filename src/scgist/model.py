@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Any, Sequence
+from collections.abc import Sequence
+from typing import Any, Literal, overload
 
 import numpy as np
 import numpy.typing as npt
@@ -54,8 +55,10 @@ class scGIST:
 
         inputs = Input(shape=(n_features,), name='inputs')
 
-        feature_regularizer = FeatureRegularizer(l1=0.01, panel_size=panel_size, priority_score=priority_scores, pairs=pairs,
-                                                 alpha=alpha, beta=beta, gamma=gamma, strict=strict)
+        feature_regularizer = FeatureRegularizer(
+            l1=0.01, panel_size=panel_size, priority_score=priority_scores, pairs=pairs,
+            alpha=alpha, beta=beta, gamma=gamma, strict=strict,
+        )
         weighted_layer = OneToOneLayer(kernel_regularizer=feature_regularizer, name='weighted_layer')(inputs)
 
         hidden1 = Dense(
@@ -138,10 +141,9 @@ class scGIST:
         )
 
         if verbose >= 1:
-            print('Loss: %.4f, Val Loss: %.4f' %
-                  (history.history['loss'][-1], history.history['val_loss'][-1]))
-            print('Accuracy: %.2f, Val Accuracy: %.2f' % (
-                history.history['accuracy'][-1] * 100, history.history['val_accuracy'][-1] * 100))
+            print(f"Loss: {history.history['loss'][-1]:.4f}, Val Loss: {history.history['val_loss'][-1]:.4f}")
+            print(f"Accuracy: {history.history['accuracy'][-1] * 100:.2f}, "
+                  f"Val Accuracy: {history.history['val_accuracy'][-1] * 100:.2f}")
 
             plot_history(history)
 
@@ -164,6 +166,16 @@ class scGIST:
             plot_marker_weights(markers_names, marker_weights)
 
         return markers_names
+
+    @overload
+    def get_markers_indices(
+        self, verbose: int = 0, plot_weights: bool = False, *, return_weights: Literal[False] = False
+    ) -> list[int]: ...
+
+    @overload
+    def get_markers_indices(
+        self, verbose: int = 0, plot_weights: bool = False, *, return_weights: Literal[True]
+    ) -> tuple[list[int], npt.NDArray[np.floating[Any]]]: ...
 
     def get_markers_indices(
         self,

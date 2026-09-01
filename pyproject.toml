@@ -37,6 +37,12 @@ benchmarks = [
     "scanpy>=1.10",
     "tqdm>=4.70",
 ]
+dev = [
+    "mypy>=2.3.1",
+    "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
+    "ruff>=0.16.4",
+]
 
 [build-system]
 requires = ["hatchling", "hatch-vcs"]
@@ -47,3 +53,38 @@ source = "vcs"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/scgist"]
+
+[tool.mypy]
+strict = true
+# Disabled: with tensorflow/sklearn/pandas untyped, nearly every return path
+# eventually touches an Any-returning call, so this flag mostly demands
+# trust-me local annotations rather than catching real bugs.
+warn_return_any = false
+
+[[tool.mypy.overrides]]
+module = ["tensorflow.*", "sklearn.*", "seaborn.*", "pandas.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# tf.keras.layers.Layer and tf.keras.regularizers.Regularizer have no type
+# stubs, so mypy sees them as "Any" — subclassing them is unavoidable here.
+module = "scgist.layers"
+disallow_subclassing_any = false
+
+[tool.ruff]
+target-version = "py310"
+line-length = 120
+# Notebooks are example artifacts revisited in the docs-polish milestone,
+# not part of the linted source distribution.
+extend-exclude = ["*.ipynb"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+
+[tool.ruff.lint.per-file-ignores]
+# Local-only config module (gitignored, never committed) conventionally
+# star-imported for its path constants.
+"benchmarks/create_panels.py" = ["F403", "F405"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -1,8 +1,11 @@
 from __future__ import annotations
 
-from typing import Any, Sequence
+from collections.abc import Sequence
+from typing import Any
 
 import matplotlib.pyplot as plt
+import numpy as np
+import numpy.typing as npt
 import pandas as pd
 import seaborn as sns
 from sklearn.metrics import confusion_matrix
@@ -10,8 +13,8 @@ from tensorflow.keras.callbacks import History
 
 
 def plot_confusion_matrix(
-    y: Sequence[int],
-    y_pred: Sequence[int],
+    y: Sequence[int] | npt.NDArray[np.integer[Any]],
+    y_pred: Sequence[int] | npt.NDArray[np.integer[Any]],
     labels: Sequence[str] | None = None,
     title: str | None = None,
     save_path: str | None = None,
@@ -38,12 +41,14 @@ def plot_confusion_matrix(
     plt.show()
 
 
-def plot_marker_weights(markers: Sequence[Any], weights: Sequence[float]) -> None:
+def plot_marker_weights(
+    markers: Sequence[Any], weights: Sequence[float] | npt.NDArray[np.floating[Any]]
+) -> None:
     total_markers = len(markers)
     sns.set_theme(style="whitegrid")
     plt.figure(figsize=(total_markers / 7.5, 4))
     plt.bar(markers, weights)
-    plt.xlim([-1, total_markers])
+    plt.xlim(-1, total_markers)
     plt.xticks(size=6, rotation=90, rotation_mode='default')
     plt.grid()
     plt.show()
