@@ -1,0 +1,92 @@
+[project]
+name = "scgist"
+dynamic = ["version"]
+description = "Gene panel design for spatial transcriptomics with prioritized gene sets"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10,<3.14"
+authors = [
+    { name = "Mashrur Ahmed Yafi", email = "yafi2475@gmail.com" },
+    { name = "Md. Hasibul Husain Hisham" },
+]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Typing :: Typed",
+]
+dependencies = [
+    "anndata>=0.10",
+    "scikit-learn>=1.4",
+    "tensorflow>=2.16",
+    "numpy>=1.26",
+    "matplotlib>=3.8",
+    "seaborn>=0.13",
+    "pandas>=2.2",
+]
+
+[project.urls]
+Homepage = "https://github.com/yafi38/scGIST"
+
+[dependency-groups]
+# Only needed to reproduce benchmarks/create_panels.py; never shipped in the
+# published package.
+benchmarks = [
+    "scanpy>=1.10",
+    "tqdm>=4.70",
+]
+dev = [
+    "mypy>=2.3.1",
+    "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
+    "ruff>=0.16.4",
+]
+
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/scgist"]
+
+[tool.mypy]
+strict = true
+# Disabled: with tensorflow/sklearn/pandas untyped, nearly every return path
+# eventually touches an Any-returning call, so this flag mostly demands
+# trust-me local annotations rather than catching real bugs.
+warn_return_any = false
+
+[[tool.mypy.overrides]]
+# anndata ships py.typed only in newer releases; older Python floors (3.10/3.11)
+# can resolve to a pre-py.typed anndata, so this can't be relied on universally.
+module = ["tensorflow.*", "sklearn.*", "seaborn.*", "pandas.*", "anndata.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# tf.keras.layers.Layer and tf.keras.regularizers.Regularizer have no type
+# stubs, so mypy sees them as "Any" — subclassing them is unavoidable here.
+module = "scgist.layers"
+disallow_subclassing_any = false
+
+[tool.ruff]
+target-version = "py310"
+line-length = 120
+# Notebooks are example artifacts revisited in the docs-polish milestone,
+# not part of the linted source distribution.
+extend-exclude = ["*.ipynb"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+
+[tool.ruff.lint.per-file-ignores]
+# Local-only config module (gitignored, never committed) conventionally
+# star-imported for its path constants.
+"benchmarks/create_panels.py" = ["F403", "F405"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
