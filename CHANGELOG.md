@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.1] - 2026-09-03
+
+### Fixed
+
+- Dropped the email from `pyproject.toml`'s author metadata. Mixing an
+  author with an email and one without collapses into PyPI's separate
+  `Author`/`Author-email` core-metadata fields, which have no per-person
+  structure — the result rendered as if the email belonged to the
+  *other* author on the PyPI project page.
+
 ## [2.0.0] - 2026-09-02
 
 ### Changed

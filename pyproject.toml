@@ -6,7 +6,7 @@ readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10,<3.14"
 authors = [
-    { name = "Mashrur Ahmed Yafi", email = "yafi2475@gmail.com" },
+    { name = "Mashrur Ahmed Yafi" },
     { name = "Md. Hasibul Husain Hisham" },
 ]
 classifiers = [
