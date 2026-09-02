@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-09-02
+
 ### Changed
 
 - **Breaking:** renamed the importable package from `scGIST` to lowercase `scgist`
@@ -29,6 +31,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A pytest suite covering `FeatureRegularizer`, `OneToOneLayer`,
   `get_priority_score_list`, `scGIST`, and `test_classifier`.
 - GitHub Actions CI workflow: lint, type-check, and test on Python 3.10–3.13.
+- Published to PyPI as `scgist`, with a GitHub Actions release workflow that
+  publishes via PyPI trusted publishing (OIDC) on each GitHub Release.
 
 ### Fixed
 

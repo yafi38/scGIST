@@ -6,7 +6,19 @@ scGIST is a deep neural network that designs sc-ST gene panel through constraine
 
 ## Installation
 
-scGIST isn't published on PyPI yet — install it from source with [uv](https://docs.astral.sh/uv/):
+```bash
+pip install scgist
+```
+
+Or with [uv](https://docs.astral.sh/uv/):
+
+```bash
+uv add scgist
+```
+
+Requires Python 3.10–3.13.
+
+### From source
 
 ```bash
 git clone https://github.com/yafi38/scGIST.git
@@ -15,7 +27,7 @@ uv sync
 ```
 
 This installs scGIST into a local `.venv`; run scripts with `uv run python ...` or activate the
-virtualenv directly. Requires Python 3.10–3.13.
+virtualenv directly.
 
 ## Usage
 
